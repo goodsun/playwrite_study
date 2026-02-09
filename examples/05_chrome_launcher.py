@@ -121,6 +121,18 @@ def run_shell(page, context, profile_name: str) -> None:
 
             elif cmd.startswith("input:"):
                 text = cmd[6:].strip()
+                if not text:
+                    # 複数行入力モード（空行で確定）
+                    print("  (複数行入力 — 空行で確定)")
+                    lines = []
+                    while True:
+                        line = input("  | ")
+                        if line == "":
+                            break
+                        lines.append(line)
+                    text = "\n".join(lines)
+                else:
+                    text = text.replace("\\n", "\n")
                 if selected_element is None:
                     print("  先に select: で要素を選択してください")
                 else:
