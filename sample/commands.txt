@@ -1,14 +1,17 @@
 # commands.txt
 url:https://x.com
 click://*[@id="react-root"]/div/div/div[2]/header/div/div/div/div[1]/div[3]/a/div
-wait:2000
+wait:3000
 select://*[@id="layers"]/div[2]/div/div/div/div/div/div[2]/div[2]/div/div/div/div[3]/div[2]/div[1]/div/div/div/div[1]/div[2]/div/div/div/div/div/div/div/div/div/div/div/div/div[1]/div/div/div/div/div/div[2]/div
-wait:2000
+wait:3000
 input:<<END
-ポストできました。
-これはいいかもしれない。
+ヒアドキュメント形式で複数入力可能
+複数行入力可能
 
-もっとがんばるぞー！
+空白行も入力可能
+
+これはテスト投稿です。
 END
 click://*[@id="layers"]/div[2]/div/div/div/div/div/div[2]/div[2]/div/div/div/div[3]/div[2]/div[1]/div/div/div/div[2]/div[2]/div/div/div/button[2]/div
+wait:3000
 quit

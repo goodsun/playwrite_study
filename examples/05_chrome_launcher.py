@@ -19,8 +19,11 @@
   uv run python examples/05_chrome_launcher.py -p myprofile -f commands.txt
 """
 
+from __future__ import annotations
+
 import argparse
 import json
+import random
 from datetime import datetime
 from pathlib import Path
 
@@ -147,7 +150,10 @@ def execute_command(cmd: str, page, context, profile_name: str, state: dict) -> 
             if state.get("selected_element") is None:
                 print("  先に select: で要素を選択してください")
             else:
-                state["selected_element"].fill(text)
+                state["selected_element"].click()
+                for ch in text:
+                    page.keyboard.type(ch)
+                    page.wait_for_timeout(random.randint(80, 300))
                 print(f"  入力完了: {text}")
 
         elif cmd in ("screenshot", "ss"):

@@ -25,6 +25,9 @@ pip install playwright pycryptodome
 playwright install chromium
 ```
 
+## linux環境などで利用する際の日本語フォント問題がある場合
+sudo dnf install -y google-noto-sans-cjk-jp-fonts
+
 ## サンプルスクリプト
 
 | スクリプト | 内容 |
@@ -172,3 +175,5 @@ playwrite/
 ├── logs/                 # コマンドログ・スクリーンショット（.gitignore対象）
 └── screenshots/          # スクリーンショット出力先（.gitignore対象）
 ```
+
+
