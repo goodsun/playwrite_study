@@ -14,6 +14,7 @@ screenshots/*.png
 screenshots/*.jpg
 screenshots/*.pdf
 profiles/*.json
+logs/
 
 # OS
 .DS_Store

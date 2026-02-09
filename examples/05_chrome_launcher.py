@@ -21,13 +21,34 @@
 
 import argparse
 import json
+from datetime import datetime
 from pathlib import Path
 
 from playwright.sync_api import sync_playwright
 
 
-SCREENSHOTS_DIR = Path(__file__).resolve().parent.parent / "screenshots"
-PROFILES_DIR = Path(__file__).resolve().parent.parent / "profiles"
+PROJECT_DIR = Path(__file__).resolve().parent.parent
+SCREENSHOTS_DIR = PROJECT_DIR / "screenshots"
+PROFILES_DIR = PROJECT_DIR / "profiles"
+LOGS_DIR = PROJECT_DIR / "logs"
+
+# ログに記録しないコマンド
+_NO_LOG_COMMANDS = {"help", "title", "save", "screenshot"}
+
+
+def format_command_for_log(cmd: str) -> str | None:
+    """コマンドをログ用の文字列に変換する。記録不要なら None を返す。"""
+    bare = cmd.split(":")[0] if ":" in cmd else cmd
+    if bare in _NO_LOG_COMMANDS:
+        return None
+
+    if cmd.startswith("input:"):
+        text = cmd[6:]
+        if "\n" in text:
+            return "input:<<END\n" + text + "\nEND"
+        return cmd
+
+    return cmd
 
 
 def list_profiles() -> list[str]:
@@ -203,13 +224,36 @@ def run_file(filepath: str, page, context, profile_name: str, state: dict) -> bo
     return True
 
 
-def run_shell(page, context, profile_name: str, command_file: str | None = None) -> None:
+def save_command_log(command_log: list[str]) -> None:
+    """実行コマンドをログファイルに保存する。"""
+    if not command_log:
+        return
+    LOGS_DIR.mkdir(exist_ok=True)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_path = LOGS_DIR / f"commands_{timestamp}.txt"
+    log_path.write_text("\n".join(command_log) + "\n")
+    print(f"コマンドログ保存: {log_path}")
+
+
+def run_shell(page, context, profile_name: str, command_file: str | None = None, initial_url: str | None = None) -> None:
     """インタラクティブシェル。"""
     state = {"selected_element": None}
+    command_log: list[str] = []
 
-    # ファイル指定があれば先に実行
+    # 初期URLをログに記録
+    if initial_url:
+        command_log.append(f"url:{initial_url}")
+
+    # ファイル指定があれば先に実行（ファイルの内容をログに記録）
     if command_file:
+        file_path = Path(command_file)
+        if file_path.exists():
+            for line in file_path.read_text().splitlines():
+                stripped = line.strip()
+                if stripped and not stripped.startswith("#"):
+                    command_log.append(stripped)
         if not run_file(command_file, page, context, profile_name, state):
+            save_command_log(command_log)
             return
 
     print("\n=== コマンド入力 (help でヘルプ表示) ===\n")
@@ -224,8 +268,15 @@ def run_shell(page, context, profile_name: str, command_file: str | None = None)
         if not cmd:
             continue
 
+        # ログに記録
+        log_entry = format_command_for_log(cmd)
+        if log_entry is not None:
+            command_log.append(log_entry)
+
         if not execute_command(cmd, page, context, profile_name, state):
             break
+
+    save_command_log(command_log)
 
 
 def main() -> None:
@@ -270,7 +321,7 @@ def main() -> None:
             page.wait_for_timeout(1000)
             print(f"  → {page.title()} ({page.url})")
 
-        run_shell(page, context, profile_name, command_file=args.f)
+        run_shell(page, context, profile_name, command_file=args.f, initial_url=args.u)
 
         # 終了時に自動保存
         PROFILES_DIR.mkdir(exist_ok=True)
