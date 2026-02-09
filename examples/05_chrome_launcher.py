@@ -33,7 +33,7 @@ PROFILES_DIR = PROJECT_DIR / "profiles"
 LOGS_DIR = PROJECT_DIR / "logs"
 
 # ログに記録しないコマンド
-_NO_LOG_COMMANDS = {"help", "title", "save", "screenshot"}
+_NO_LOG_COMMANDS = {"help", "title", "save", "screenshot", "ss"}
 
 
 def format_command_for_log(cmd: str) -> str | None:
@@ -97,7 +97,7 @@ def execute_command(cmd: str, page, context, profile_name: str, state: dict) -> 
             print("  click:<selector>   要素をクリック")
             print("  select:<selector>  要素を選択（内容を表示）")
             print("  input:<text>       選択中の要素にテキスト入力")
-            print("  screenshot         スクリーンショット保存")
+            print("  ss                 スクリーンショット保存")
             print("  title              ページタイトル表示")
             print("  save               セッションを保存")
             print("  wait:<ms>          指定ミリ秒待機")
@@ -150,9 +150,10 @@ def execute_command(cmd: str, page, context, profile_name: str, state: dict) -> 
                 state["selected_element"].fill(text)
                 print(f"  入力完了: {text}")
 
-        elif cmd == "screenshot":
-            SCREENSHOTS_DIR.mkdir(exist_ok=True)
-            path = SCREENSHOTS_DIR / "05_screenshot.png"
+        elif cmd in ("screenshot", "ss"):
+            LOGS_DIR.mkdir(exist_ok=True)
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            path = LOGS_DIR / f"screenshot_{timestamp}.png"
             page.screenshot(path=str(path))
             print(f"  保存: {path}")
 
@@ -224,15 +225,20 @@ def run_file(filepath: str, page, context, profile_name: str, state: dict) -> bo
     return True
 
 
-def save_command_log(command_log: list[str]) -> None:
-    """実行コマンドをログファイルに保存する。"""
+def save_session_log(command_log: list[str], page) -> None:
+    """実行コマンドのログとスクリーンショットを保存する。"""
     if not command_log:
         return
     LOGS_DIR.mkdir(exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
     log_path = LOGS_DIR / f"commands_{timestamp}.txt"
     log_path.write_text("\n".join(command_log) + "\n")
     print(f"コマンドログ保存: {log_path}")
+
+    ss_path = LOGS_DIR / f"screenshot_{timestamp}.png"
+    page.screenshot(path=str(ss_path))
+    print(f"スクリーンショット保存: {ss_path}")
 
 
 def run_shell(page, context, profile_name: str, command_file: str | None = None, initial_url: str | None = None) -> None:
@@ -253,7 +259,7 @@ def run_shell(page, context, profile_name: str, command_file: str | None = None,
                 if stripped and not stripped.startswith("#"):
                     command_log.append(stripped)
         if not run_file(command_file, page, context, profile_name, state):
-            save_command_log(command_log)
+            save_session_log(command_log, page)
             return
 
     print("\n=== コマンド入力 (help でヘルプ表示) ===\n")
@@ -276,7 +282,7 @@ def run_shell(page, context, profile_name: str, command_file: str | None = None,
         if not execute_command(cmd, page, context, profile_name, state):
             break
 
-    save_command_log(command_log)
+    save_session_log(command_log, page)
 
 
 def main() -> None:

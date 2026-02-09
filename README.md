@@ -5,9 +5,10 @@ Playwright を Python で使い、ブラウザ自動操作の基本から応用�
 ## 前提条件
 
 - Python 3.13+
-- [uv](https://docs.astral.sh/uv/) (パッケージマネージャ)
 
 ## セットアップ
+
+### uv を使う場合（推奨）
 
 ```bash
 # 依存パッケージのインストール
@@ -15,6 +16,13 @@ uv sync
 
 # ブラウザバイナリのインストール（初回のみ）
 uv run playwright install chromium
+```
+
+### pip を使う場合
+
+```bash
+pip install playwright pycryptodome
+playwright install chromium
 ```
 
 ## サンプルスクリプト
@@ -26,6 +34,7 @@ uv run playwright install chromium
 | `examples/03_advanced.py` | 複数タブ操作・ネットワーク傍受・PDF出力 |
 | `examples/04_login.py` | x.com ログインページへの遷移 |
 | `examples/05_chrome_launcher.py` | インタラクティブシェル（セッション管理付き） |
+| `examples/06_export_cookies.py` | Chrome の Cookie を Playwright プロファイルにエクスポート |
 
 ## 実行方法
 
@@ -59,7 +68,15 @@ uv run python examples/05_chrome_launcher.py
 
 # プロファイルとURLを指定して起動
 uv run python examples/05_chrome_launcher.py -p myprofile -u https://example.com
+
+# コマンドファイルから実行
+uv run python examples/05_chrome_launcher.py -p myprofile -f commands.txt
+
+# ヘッドレスモードで自動実行
+uv run python examples/05_chrome_launcher.py -p myprofile -f commands.txt --headless
 ```
+
+pip の場合は `uv run python` を `python` に置き換える。
 
 ### コマンド一覧
 
@@ -68,8 +85,9 @@ uv run python examples/05_chrome_launcher.py -p myprofile -u https://example.com
 | `url:<URL>` | 指定URLに遷移 |
 | `click:<selector>` | 要素をクリック |
 | `select:<selector>` | 要素を選択して内容を表示 |
-| `input:<text>` | 選択中の要素にテキスト入力 |
-| `screenshot` | スクリーンショット保存 |
+| `input:<text>` | 選択中の要素にテキスト入力（`\n` で改行、空で複数行モード） |
+| `wait:<ms>` | 指定ミリ秒待機 |
+| `ss` | スクリーンショット保存（`logs/` に出力） |
 | `title` | ページタイトルとURL表示 |
 | `save` | セッションをプロファイルに保存 |
 | `quit` | 終了（自動保存される） |
@@ -107,6 +125,36 @@ command: save
 uv run python examples/05_chrome_launcher.py -p teddy -u https://x.com/home
 ```
 
+### コマンドファイル
+
+コマンドを1行1つ記述したテキストファイル。`-f` で指定して自動実行できる。
+`#` で始まる行はコメント。複数行入力はヒアドキュメント形式で記述する。
+
+```
+# sample/commands.txt
+url:https://x.com
+click://投稿ボタン
+wait:2000
+select://テキストエリア
+input:<<END
+1行目
+2行目
+END
+click://送信ボタン
+quit
+```
+
+終了時にはコマンドログとスクリーンショットが `logs/` に自動保存される。
+ログファイルはそのまま `-f` で再実行できる。
+
+## Cookie エクスポート（06_export_cookies.py）
+
+通常の Chrome でログイン済みの Cookie を Playwright プロファイルにエクスポートする。
+
+```bash
+uv run python examples/06_export_cookies.py -p myprofile -d x.com
+```
+
 ## ディレクトリ構成
 
 ```
@@ -117,7 +165,10 @@ playwrite/
 │   ├── 02_interaction.py
 │   ├── 03_advanced.py
 │   ├── 04_login.py
-│   └── 05_chrome_launcher.py
-├── screenshots/          # スクリーンショット出力先（.gitignore対象）
-└── profiles/             # セッションプロファイル（.gitignore対象）
+│   ├── 05_chrome_launcher.py
+│   └── 06_export_cookies.py
+├── sample/               # コマンドファイルのサンプル
+├── profiles/             # セッションプロファイル（.gitignore対象）
+├── logs/                 # コマンドログ・スクリーンショット（.gitignore対象）
+└── screenshots/          # スクリーンショット出力先（.gitignore対象）
 ```
