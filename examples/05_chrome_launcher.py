@@ -287,6 +287,7 @@ def main() -> None:
     parser.add_argument("-p", type=str, help="プロファイル名")
     parser.add_argument("-u", type=str, help="開くURL")
     parser.add_argument("-f", type=str, help="コマンドファイル")
+    parser.add_argument("--headless", action="store_true", help="ヘッドレスモードで実行")
     args = parser.parse_args()
 
     # プロファイル選択
@@ -302,7 +303,7 @@ def main() -> None:
         profile_path = PROFILES_DIR / f"{profile_name}.json"
 
     with sync_playwright() as pw:
-        browser = pw.chromium.launch(headless=False)
+        browser = pw.chromium.launch(headless=args.headless)
 
         # プロファイルが存在すればセッションを復元
         if profile_path.exists():
