@@ -29,7 +29,7 @@ def main() -> None:
         print("検索ワード入力完了")
 
         # 検索ボタンをクリック
-        page.locator("#searchButton").click()
+        page.locator("#searchform button.cdx-search-input__end-button").click()
 
         # ページ遷移を待機
         page.wait_for_load_state("networkidle")
