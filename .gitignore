@@ -13,6 +13,7 @@ wheels/
 screenshots/*.png
 screenshots/*.jpg
 screenshots/*.pdf
+profiles/*.json
 
 # OS
 .DS_Store
